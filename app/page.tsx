@@ -30,7 +30,7 @@ export default function DashboardOverview() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {/* ... (Keep your existing Total Balance, Income, and Expense Cards here) ... */}
-        <Card>
+        <Card className="border-border/70">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
             <IndianRupee className="h-4 w-4 text-muted-foreground" />
@@ -42,7 +42,7 @@ export default function DashboardOverview() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/70">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Income</CardTitle>
             <ArrowUpRight className="h-4 w-4 text-emerald-500" />
@@ -54,7 +54,7 @@ export default function DashboardOverview() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/70">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Expenses

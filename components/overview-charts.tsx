@@ -110,7 +110,7 @@ export function OverviewCharts() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Time-Based Visualization */}
-      <Card>
+      <Card className="border-border/70">
         <CardHeader>
           <CardTitle>Cash Flow</CardTitle>
           <CardDescription>Income vs Expenses over time</CardDescription>
@@ -137,7 +137,7 @@ export function OverviewCharts() {
       </Card>
 
       {/* Categorical Visualization */}
-      <Card>
+      <Card className="border-border/70">
         <CardHeader>
           <CardTitle>Spending Breakdown</CardTitle>
           <CardDescription>Where your money is going</CardDescription>
