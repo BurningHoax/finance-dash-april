@@ -22,7 +22,8 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
-          enableSystem = {false}
+          storageKey="finance-dash-theme"
+          enableSystem={false}
           disableTransitionOnChange
         >
           {/* Main App Shell */}

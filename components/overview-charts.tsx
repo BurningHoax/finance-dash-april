@@ -17,6 +17,19 @@ import {
 } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, PieChart, Pie } from "recharts"; // Removed 'Cell'
 
+type BarDataPoint = {
+  date: string;
+  income: number;
+  expense: number;
+  rawDate: number;
+};
+
+type PieDataPoint = {
+  category: string;
+  amount: number;
+  fill: string;
+};
+
 // Configuration for the Bar Chart colors/labels
 const barChartConfig = {
   income: { label: "Income", color: "var(--chart-2)" },
@@ -31,6 +44,13 @@ const pieChartConfig = {
   Entertainment: { label: "Entertainment", color: "var(--chart-3)" },
   Utilities: { label: "Utilities", color: "var(--chart-4)" },
   Other: { label: "Other", color: "var(--chart-5)" },
+};
+
+const expenseCategoryMap: Record<string, { label: string; color: string }> = {
+  groceries: { label: "Groceries", color: "var(--chart-1)" },
+  rent: { label: "Rent", color: "var(--chart-2)" },
+  entertainment: { label: "Entertainment", color: "var(--chart-3)" },
+  utilities: { label: "Utilities", color: "var(--chart-4)" },
 };
 
 export function OverviewCharts() {
@@ -58,30 +78,34 @@ export function OverviewCharts() {
         });
       }
       return acc;
-    }, [] as any[])
+    }, [] as BarDataPoint[])
     .sort((a, b) => a.rawDate - b.rawDate);
 
-  // 2. Process Data for Pie Chart (Expenses by Category) - UPDATED FOR MODERN RECHARTS
+  // 2. Process Data for Pie Chart (Expenses by Category)
   const pieData = transactions
     .filter((t) => t.type === "expense")
     .reduce((acc, curr) => {
-      const existing = acc.find((item) => item.category === curr.category);
+      const normalizedCategory = curr.category.trim().toLowerCase();
+      const mappedCategory = expenseCategoryMap[normalizedCategory] ?? {
+        label: "Other",
+        color: "var(--chart-5)",
+      };
+
+      const existing = acc.find(
+        (item) => item.category === mappedCategory.label,
+      );
+
       if (existing) {
         existing.amount += curr.amount;
       } else {
-        // Map the category to a key in our config, fallback to 'Other' if it doesn't exist
-        const configKey =
-          curr.category in pieChartConfig ? curr.category : "Other";
-
         acc.push({
-          category: curr.category,
+          category: mappedCategory.label,
           amount: curr.amount,
-          // Inject the fill color directly into the data payload using shadcn's CSS variables
-          fill: `var(--color-${configKey})`,
+          fill: mappedCategory.color,
         });
       }
       return acc;
-    }, [] as any[]);
+    }, [] as PieDataPoint[]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
