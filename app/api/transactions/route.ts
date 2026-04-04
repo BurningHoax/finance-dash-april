@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServiceRoleClient, supabase } from "@/lib/supabase";
+import { getUserScopedClient } from "@/lib/supabase";
 
 type TransactionType = "income" | "expense";
 
@@ -9,6 +9,7 @@ type TransactionRow = {
   amount: number;
   category: string;
   type: TransactionType;
+  user_id: string | null;
   created_at: string;
 };
 
@@ -71,10 +72,61 @@ function validatePayload(payload: unknown): {
   };
 }
 
-export async function GET() {
-  const { data, error } = await supabase
+function getAccessToken(request: Request): string | null {
+  const authorization = request.headers.get("authorization");
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const token = authorization.slice("Bearer ".length).trim();
+  return token.length > 0 ? token : null;
+}
+
+function getUserRole(user: {
+  app_metadata?: Record<string, unknown>;
+}): string | null {
+  const role = user.app_metadata?.role;
+  return typeof role === "string" ? role : null;
+}
+
+async function authenticateRequest(request: Request) {
+  const accessToken = getAccessToken(request);
+  if (!accessToken) {
+    return {
+      ok: false as const,
+      response: NextResponse.json(
+        { error: "Missing Bearer token in Authorization header" },
+        { status: 401 },
+      ),
+    };
+  }
+
+  const client = getUserScopedClient(accessToken);
+  const { data, error } = await client.auth.getUser();
+
+  if (error || !data.user) {
+    return {
+      ok: false as const,
+      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    };
+  }
+
+  return {
+    ok: true as const,
+    client,
+    user: data.user,
+  };
+}
+
+export async function GET(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  const { data, error } = await auth.client
     .from("transactions")
-    .select("id, date, amount, category, type, created_at")
+    .select("id, date, amount, category, type, user_id, created_at")
     .order("date", { ascending: false })
     .returns<TransactionRow[]>();
 
@@ -86,8 +138,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const roleHeader = request.headers.get("x-role");
-  if (roleHeader !== "admin") {
+  const auth = await authenticateRequest(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
+  const role = getUserRole(auth.user);
+  if (role !== "admin") {
     return NextResponse.json(
       { error: "Forbidden: admin role required" },
       { status: 403 },
@@ -104,11 +161,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const serviceRoleClient = getServiceRoleClient();
-  const { data, error } = await serviceRoleClient
+  const { data, error } = await auth.client
     .from("transactions")
-    .insert(validation.data)
-    .select("id, date, amount, category, type, created_at")
+    .insert({ ...validation.data, user_id: auth.user.id })
+    .select("id, date, amount, category, type, user_id, created_at")
     .single<TransactionRow>();
 
   if (error) {
