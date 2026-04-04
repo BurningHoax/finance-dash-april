@@ -3,7 +3,7 @@
 import { useStore } from "@/store/useStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, IndianRupee } from "lucide-react";
-import { OverviewCharts } from "@/components/overview-charts"; // <-- Add this import
+import { OverviewCharts } from "@/components/overview-charts";
 import { formatCurrencyINR } from "@/lib/utils";
 
 export default function DashboardOverview() {
@@ -29,7 +29,6 @@ export default function DashboardOverview() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {/* ... (Keep your existing Total Balance, Income, and Expense Cards here) ... */}
         <Card className="border-border/70">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Balance</CardTitle>

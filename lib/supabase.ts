@@ -1,15 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 
-function getRequiredEnv(name: string): string {
-  const value = process.env[name];
+function getRequiredEnv(value: string | undefined, name: string): string {
   if (!value) {
     throw new Error(`${name} is not set`);
   }
   return value;
 }
 
-const supabaseUrl = getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
-const supabaseAnonKey = getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+const supabaseUrl = getRequiredEnv(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  "NEXT_PUBLIC_SUPABASE_URL",
+);
+const supabaseAnonKey = getRequiredEnv(
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -28,7 +33,10 @@ export function getUserScopedClient(accessToken: string) {
 }
 
 export function getServiceRoleClient() {
-  const serviceRoleKey = getRequiredEnv("SUPABASE_SERVICE_ROLE");
+  const serviceRoleKey = getRequiredEnv(
+    process.env.SUPABASE_SERVICE_ROLE,
+    "SUPABASE_SERVICE_ROLE",
+  );
 
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },

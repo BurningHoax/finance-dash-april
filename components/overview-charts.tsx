@@ -15,7 +15,16 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, PieChart, Pie } from "recharts"; // Removed 'Cell'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  PieChart,
+  Pie,
+} from "recharts";
+import { mapExpenseCategory } from "@/lib/transactions";
 
 type BarDataPoint = {
   date: string;
@@ -43,14 +52,14 @@ const pieChartConfig = {
   Rent: { label: "Rent", color: "var(--chart-2)" },
   Entertainment: { label: "Entertainment", color: "var(--chart-3)" },
   Utilities: { label: "Utilities", color: "var(--chart-4)" },
+  Food: { label: "Food", color: "var(--chart-5)" },
+  Transport: { label: "Transport", color: "var(--chart-1)" },
+  Healthcare: { label: "Healthcare", color: "var(--chart-2)" },
+  Shopping: { label: "Shopping", color: "var(--chart-3)" },
+  Education: { label: "Education", color: "var(--chart-4)" },
+  Travel: { label: "Travel", color: "var(--chart-5)" },
+  Bills: { label: "Bills", color: "var(--chart-2)" },
   Other: { label: "Other", color: "var(--chart-5)" },
-};
-
-const expenseCategoryMap: Record<string, { label: string; color: string }> = {
-  groceries: { label: "Groceries", color: "var(--chart-1)" },
-  rent: { label: "Rent", color: "var(--chart-2)" },
-  entertainment: { label: "Entertainment", color: "var(--chart-3)" },
-  utilities: { label: "Utilities", color: "var(--chart-4)" },
 };
 
 export function OverviewCharts() {
@@ -85,11 +94,7 @@ export function OverviewCharts() {
   const pieData = transactions
     .filter((t) => t.type === "expense")
     .reduce((acc, curr) => {
-      const normalizedCategory = curr.category.trim().toLowerCase();
-      const mappedCategory = expenseCategoryMap[normalizedCategory] ?? {
-        label: "Other",
-        color: "var(--chart-5)",
-      };
+      const mappedCategory = mapExpenseCategory(curr.category);
 
       const existing = acc.find(
         (item) => item.category === mappedCategory.label,
@@ -105,7 +110,8 @@ export function OverviewCharts() {
         });
       }
       return acc;
-    }, [] as PieDataPoint[]);
+    }, [] as PieDataPoint[])
+    .sort((a, b) => b.amount - a.amount);
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -116,7 +122,7 @@ export function OverviewCharts() {
           <CardDescription>Income vs Expenses over time</CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={barChartConfig} className="h-[300px] w-full">
+          <ChartContainer config={barChartConfig} className="h-75 w-full">
             <BarChart accessibilityLayer data={barData}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -124,6 +130,14 @@ export function OverviewCharts() {
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) =>
+                  `Rs ${Number(value).toLocaleString("en-IN")}`
+                }
+                width={88}
               />
               <ChartTooltip
                 content={<ChartTooltipContent indicator="dashed" />}
@@ -143,13 +157,12 @@ export function OverviewCharts() {
           <CardDescription>Where your money is going</CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={pieChartConfig} className="h-[300px] w-full">
+          <ChartContainer config={pieChartConfig} className="h-75 w-full">
             <PieChart>
               <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent hideLabel />}
               />
-              {/* No more deprecated <Cell> mapping here! */}
               <Pie
                 data={pieData}
                 dataKey="amount"
@@ -158,7 +171,9 @@ export function OverviewCharts() {
                 strokeWidth={5}
                 paddingAngle={5}
               />
-              <ChartLegend content={<ChartLegendContent />} />
+              <ChartLegend
+                content={<ChartLegendContent nameKey="category" />}
+              />
             </PieChart>
           </ChartContainer>
         </CardContent>

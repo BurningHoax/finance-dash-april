@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { getUserScopedClient } from "@/lib/supabase";
-
-type TransactionType = "income" | "expense";
+import {
+  isTransactionType,
+  type NewTransactionPayload,
+  type TransactionType,
+} from "@/lib/transactions";
 
 type TransactionRow = {
   id: string;
   date: string;
+  title: string;
   amount: number;
   category: string;
   type: TransactionType;
@@ -13,19 +17,8 @@ type TransactionRow = {
   created_at: string;
 };
 
-type NewTransactionPayload = {
-  date: string;
-  amount: number;
-  category: string;
-  type: TransactionType;
-};
-
 function isValidDate(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function isValidTransactionType(value: unknown): value is TransactionType {
-  return value === "income" || value === "expense";
 }
 
 function validatePayload(payload: unknown): {
@@ -40,6 +33,8 @@ function validatePayload(payload: unknown): {
   const candidate = payload as Record<string, unknown>;
 
   const date = typeof candidate.date === "string" ? candidate.date : "";
+  const title =
+    typeof candidate.title === "string" ? candidate.title.trim() : "";
   const amount = typeof candidate.amount === "number" ? candidate.amount : NaN;
   const category =
     typeof candidate.category === "string" ? candidate.category.trim() : "";
@@ -53,11 +48,15 @@ function validatePayload(payload: unknown): {
     return { valid: false, message: "amount must be a positive number" };
   }
 
+  if (!title) {
+    return { valid: false, message: "title is required" };
+  }
+
   if (!category) {
     return { valid: false, message: "category is required" };
   }
 
-  if (!isValidTransactionType(type)) {
+  if (!isTransactionType(type)) {
     return { valid: false, message: "type must be income or expense" };
   }
 
@@ -65,6 +64,7 @@ function validatePayload(payload: unknown): {
     valid: true,
     data: {
       date,
+      title,
       amount,
       category,
       type,
@@ -80,13 +80,6 @@ function getAccessToken(request: Request): string | null {
 
   const token = authorization.slice("Bearer ".length).trim();
   return token.length > 0 ? token : null;
-}
-
-function getUserRole(user: {
-  app_metadata?: Record<string, unknown>;
-}): string | null {
-  const role = user.app_metadata?.role;
-  return typeof role === "string" ? role : null;
 }
 
 async function authenticateRequest(request: Request) {
@@ -126,7 +119,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await auth.client
     .from("transactions")
-    .select("id, date, amount, category, type, user_id, created_at")
+    .select("id, date, title, amount, category, type, user_id, created_at")
     .order("date", { ascending: false })
     .returns<TransactionRow[]>();
 
@@ -143,14 +136,6 @@ export async function POST(request: Request) {
     return auth.response;
   }
 
-  const role = getUserRole(auth.user);
-  if (role !== "admin") {
-    return NextResponse.json(
-      { error: "Forbidden: admin role required" },
-      { status: 403 },
-    );
-  }
-
   const payload = await request.json();
   const validation = validatePayload(payload);
 
@@ -164,7 +149,7 @@ export async function POST(request: Request) {
   const { data, error } = await auth.client
     .from("transactions")
     .insert({ ...validation.data, user_id: auth.user.id })
-    .select("id, date, amount, category, type, user_id, created_at")
+    .select("id, date, title, amount, category, type, user_id, created_at")
     .single<TransactionRow>();
 
   if (error) {

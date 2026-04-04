@@ -2,28 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
-import { useStore } from "@/store/useStore";
+import { AuthDialog } from "@/components/auth/auth-dialog";
+import { ThemeToggleButton } from "@/components/theme-toggle-button";
+import { NavbarRoleMenu } from "@/components/navbar-role-menu";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  LayoutDashboard,
-  Moon,
-  ReceiptText,
-  ShieldAlert,
-  Sun,
-  User,
-} from "lucide-react";
+import { LayoutDashboard, ReceiptText } from "lucide-react";
+import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { useTransactionsSync } from "@/hooks/use-transactions-sync";
 
 export function Navbar() {
-  const { role, setRole } = useStore();
+  const { user, accessToken, isLoading } = useSupabaseAuth();
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
+
+  useTransactionsSync({ accessToken, isAuthLoading: isLoading });
 
   return (
     <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur md:px-8">
@@ -54,42 +45,10 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon-sm"
-          className="shadow-xs hover:shadow-sm"
-          aria-label="Toggle theme"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          <Sun className="hidden w-4 h-4 dark:block" />
-          <Moon className="w-4 h-4 dark:hidden" />
-        </Button>
+        <NavbarRoleMenu />
+        <ThemeToggleButton />
 
-        {/* Role Switcher - Fulfills Core Requirement 3 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 shadow-xs hover:shadow-sm"
-            >
-              {role === "admin" ? (
-                <ShieldAlert className="w-4 h-4 text-rose-500" />
-              ) : (
-                <User className="w-4 h-4 text-blue-500" />
-              )}
-              Role: {role.charAt(0).toUpperCase() + role.slice(1)}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setRole("viewer")}>
-              <User className="w-4 h-4 mr-2" /> Viewer (Read-only)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setRole("admin")}>
-              <ShieldAlert className="w-4 h-4 mr-2" /> Admin (Edit access)
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {!user ? <AuthDialog /> : null}
       </div>
     </nav>
   );

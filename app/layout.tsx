@@ -26,7 +26,6 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          {/* Main App Shell */}
           <div className="min-h-screen flex flex-col bg-muted/40">
             <Navbar />
             <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
