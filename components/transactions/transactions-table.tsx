@@ -42,6 +42,7 @@ export function TransactionsTable({
 
   const handleDelete = async (id: string) => {
     if (!accessToken) {
+      onDeleted(id);
       return;
     }
 
@@ -145,7 +146,7 @@ export function TransactionsTable({
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      disabled={!accessToken || deletingId === transaction.id}
+                      disabled={deletingId === transaction.id}
                       onClick={() => void handleDelete(transaction.id)}
                     >
                       <Trash2 className="size-4 text-destructive" />

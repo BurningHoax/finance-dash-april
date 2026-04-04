@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogIn } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,24 +15,54 @@ import {
 } from "@/components/ui/dialog";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 
-export function AuthDialog() {
-  const { signIn } = useSupabaseAuth();
+type AuthMode = "signin" | "signup";
+
+type Props = {
+  mode?: AuthMode;
+  triggerLabel?: string;
+  variant?: "outline" | "default" | "secondary" | "ghost";
+};
+
+export function AuthDialog({
+  mode = "signin",
+  triggerLabel,
+  variant = "outline",
+}: Props) {
+  const {
+    signIn,
+    sendEmailOtp,
+    verifyEmailOtp,
+    sendPasswordResetEmail,
+    updatePassword,
+  } = useSupabaseAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const onSubmit = async () => {
     setError(null);
+    setSuccess(null);
 
     if (!email.trim() || !password) {
       setError("Email and password are required.");
       return;
     }
 
+    if (mode === "signup" && !isOtpVerified) {
+      setError("Verify your email OTP first, then complete signup.");
+      return;
+    }
+
     setIsSubmitting(true);
-    const result = await signIn({ email: email.trim(), password });
+    const result =
+      mode === "signin"
+        ? await signIn({ email: email.trim(), password })
+        : await updatePassword({ password });
 
     if (result.error) {
       setError(result.error.message);
@@ -42,23 +72,117 @@ export function AuthDialog() {
 
     setIsSubmitting(false);
     setPassword("");
+
+    if (mode === "signup") {
+      setSuccess("Account created and verified successfully.");
+      return;
+    }
+
     setIsOpen(false);
   };
+
+  const onSendOtp = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!email.trim()) {
+      setError("Email is required to send an OTP.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await sendEmailOtp({
+      email: email.trim(),
+      shouldCreateUser: true,
+    });
+
+    if (result.error) {
+      setError(result.error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setSuccess("OTP sent to your email. Enter the code to verify your signup.");
+    setIsOtpVerified(false);
+    setIsSubmitting(false);
+  };
+
+  const onVerifyOtp = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!email.trim() || !otpCode.trim()) {
+      setError("Email and OTP code are required.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await verifyEmailOtp({
+      email: email.trim(),
+      token: otpCode.trim(),
+    });
+
+    if (result.error) {
+      setError(result.error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setSuccess("Email verified. Now set your password and click Sign up.");
+    setIsOtpVerified(true);
+    setOtpCode("");
+    setIsSubmitting(false);
+  };
+
+  const onForgotPassword = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!email.trim()) {
+      setError("Enter your email first to receive a password reset link.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await sendPasswordResetEmail({ email: email.trim() });
+
+    if (result.error) {
+      setError(result.error.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setSuccess(
+      "Password reset email sent. Check your inbox for the recovery link.",
+    );
+    setIsSubmitting(false);
+  };
+
+  const title = mode === "signin" ? "Sign in" : "Create account";
+  const description =
+    mode === "signin"
+      ? "Sign in with email and password."
+      : "Create an account with OTP verification, then set your password.";
+  const actionLabel = mode === "signin" ? "Sign in" : "Sign up";
+  const loadingLabel = mode === "signin" ? "Signing in..." : "Signing up...";
+  const label = triggerLabel ?? (mode === "signin" ? "Login" : "Sign up");
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <LogIn className="size-4" />
-          Login
+        <Button variant={variant} size="sm" className="gap-2">
+          {mode === "signin" ? (
+            <LogIn className="size-4" />
+          ) : (
+            <UserPlus className="size-4" />
+          )}
+          {label}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Sign in</DialogTitle>
-          <DialogDescription>
-            Authenticate with your Supabase user account.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -70,7 +194,12 @@ export function AuthDialog() {
               id="auth-email"
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                if (mode === "signup") {
+                  setIsOtpVerified(false);
+                }
+              }}
               placeholder="you@example.com"
             />
           </div>
@@ -86,14 +215,63 @@ export function AuthDialog() {
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter your password"
             />
+            {mode === "signin" ? (
+              <button
+                type="button"
+                className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                onClick={onForgotPassword}
+                disabled={isSubmitting}
+              >
+                Forgot password?
+              </button>
+            ) : null}
           </div>
 
+          {mode === "signup" ? (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                onClick={onSendOtp}
+                disabled={isSubmitting}
+              >
+                Send OTP
+              </Button>
+              <Input
+                id="auth-otp"
+                value={otpCode}
+                onChange={(event) => setOtpCode(event.target.value)}
+                placeholder="Enter OTP"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onVerifyOtp}
+                disabled={isSubmitting}
+              >
+                Verify OTP
+              </Button>
+            </div>
+          ) : null}
+
+          {mode === "signup" ? (
+            <p className="text-xs text-muted-foreground">
+              {isOtpVerified
+                ? "OTP verified. You can now complete signup."
+                : "Step 1: Send OTP. Step 2: Verify OTP. Step 3: Set password and Sign up."}
+            </p>
+          ) : null}
+
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {success ? (
+            <p className="text-sm text-emerald-600">{success}</p>
+          ) : null}
         </div>
 
         <DialogFooter>
           <Button type="button" onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Signing in..." : "Sign in"}
+            {isSubmitting ? loadingLabel : actionLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

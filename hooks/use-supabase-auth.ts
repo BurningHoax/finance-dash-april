@@ -9,6 +9,29 @@ type SignInInput = {
   password: string;
 };
 
+type SignUpInput = {
+  email: string;
+  password: string;
+};
+
+type OtpInput = {
+  email: string;
+  shouldCreateUser?: boolean;
+};
+
+type VerifyOtpInput = {
+  email: string;
+  token: string;
+};
+
+type PasswordResetInput = {
+  email: string;
+};
+
+type UpdatePasswordInput = {
+  password: string;
+};
+
 export function useSupabaseAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -45,6 +68,63 @@ export function useSupabaseAuth() {
     return { error };
   }, []);
 
+  const signUp = useCallback(async ({ email, password }: SignUpInput) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    return { error };
+  }, []);
+
+  const sendEmailOtp = useCallback(
+    async ({ email, shouldCreateUser = false }: OtpInput) => {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser },
+      });
+
+      return { error };
+    },
+    [],
+  );
+
+  const verifyEmailOtp = useCallback(
+    async ({ email, token }: VerifyOtpInput) => {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email",
+      });
+
+      return { error };
+    },
+    [],
+  );
+
+  const sendPasswordResetEmail = useCallback(
+    async ({ email }: PasswordResetInput) => {
+      const redirectTo =
+        typeof window === "undefined"
+          ? undefined
+          : `${window.location.origin}/reset-password`;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+
+      return { error };
+    },
+    [],
+  );
+
+  const updatePassword = useCallback(
+    async ({ password }: UpdatePasswordInput) => {
+      const { error } = await supabase.auth.updateUser({ password });
+      return { error };
+    },
+    [],
+  );
+
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
     return { error };
@@ -55,6 +135,11 @@ export function useSupabaseAuth() {
     accessToken,
     isLoading,
     signIn,
+    signUp,
+    sendEmailOtp,
+    verifyEmailOtp,
+    sendPasswordResetEmail,
+    updatePassword,
     signOut,
   };
 }

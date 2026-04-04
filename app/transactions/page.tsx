@@ -105,6 +105,13 @@ export default function TransactionsPage() {
         onReset={resetFilters}
       />
 
+      {!accessToken ? (
+        <p className="text-sm text-muted-foreground">
+          Guest mode is active. You can add and delete transactions locally, but
+          data will reset after refresh. Sign up or log in to save records.
+        </p>
+      ) : null}
+
       <TransactionsTable
         transactions={filteredTransactions}
         accessToken={accessToken}

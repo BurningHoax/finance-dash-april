@@ -52,11 +52,6 @@ export function AddTransactionDialog({ accessToken, onCreated }: Props) {
   const handleCreate = async () => {
     setApiError(null);
 
-    if (!accessToken) {
-      setApiError("Please log in first.");
-      return;
-    }
-
     const amount = Number(formAmount);
     if (
       !formDate ||
@@ -76,6 +71,20 @@ export function AddTransactionDialog({ accessToken, onCreated }: Props) {
       category: formCategory.trim(),
       type: formType,
     };
+
+    if (!accessToken) {
+      onCreated({
+        id: `guest-${crypto.randomUUID()}`,
+        date: payload.date,
+        title: payload.title,
+        amount: payload.amount,
+        category: payload.category,
+        type: payload.type,
+      });
+      resetForm();
+      setIsOpen(false);
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -99,7 +108,7 @@ export function AddTransactionDialog({ accessToken, onCreated }: Props) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button disabled={!accessToken} className="gap-2">
+        <Button className="gap-2">
           <Plus className="size-4" />
           Add Transaction
         </Button>
@@ -107,7 +116,11 @@ export function AddTransactionDialog({ accessToken, onCreated }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Transaction</DialogTitle>
-          <DialogDescription>Saved to your account.</DialogDescription>
+          <DialogDescription>
+            {accessToken
+              ? "Saved to your account."
+              : "Guest mode: changes are local and will reset after refresh."}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

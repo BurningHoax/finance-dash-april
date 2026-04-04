@@ -6,7 +6,7 @@ import { AuthDialog } from "@/components/auth/auth-dialog";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
 import { NavbarRoleMenu } from "@/components/navbar-role-menu";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, ReceiptText } from "lucide-react";
+import { Home, LayoutDashboard, ReceiptText } from "lucide-react";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { useTransactionsSync } from "@/hooks/use-transactions-sync";
 
@@ -28,8 +28,17 @@ export function Navbar() {
               variant={pathname === "/" ? "secondary" : "ghost"}
               size="sm"
             >
+              <Home className="w-4 h-4 mr-2" />
+              Home
+            </Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button
+              variant={pathname === "/dashboard" ? "secondary" : "ghost"}
+              size="sm"
+            >
               <LayoutDashboard className="w-4 h-4 mr-2" />
-              Overview
+              Dashboard
             </Button>
           </Link>
           <Link href="/transactions">
@@ -48,7 +57,9 @@ export function Navbar() {
         <NavbarRoleMenu />
         <ThemeToggleButton />
 
-        {!user ? <AuthDialog /> : null}
+        {!user ? (
+          <AuthDialog triggerLabel="Login / Sign up" mode="signin" />
+        ) : null}
       </div>
     </nav>
   );

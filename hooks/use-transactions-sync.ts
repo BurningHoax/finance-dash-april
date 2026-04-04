@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useStore, type Transaction } from "@/store/useStore";
+import { GUEST_TRANSACTIONS } from "@/lib/guest-transactions";
 
 type SyncInput = {
   accessToken: string | null;
@@ -18,7 +19,7 @@ export function useTransactionsSync({ accessToken, isAuthLoading }: SyncInput) {
 
     const fetchTransactions = async () => {
       if (!accessToken) {
-        setTransactions([]);
+        setTransactions(GUEST_TRANSACTIONS);
         setTransactionsLoading(false);
         return;
       }
