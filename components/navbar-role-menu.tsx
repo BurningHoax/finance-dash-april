@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function NavbarRoleMenu() {
+  const router = useRouter();
   const { user, signOut } = useSupabaseAuth();
+
+  const onSignOut = async () => {
+    const result = await signOut();
+    if (!result.error) {
+      router.replace("/");
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -47,7 +56,7 @@ export function NavbarRoleMenu() {
           {user ? "Signed in" : "Signed out"}
         </DropdownMenuItem>
         {user ? (
-          <DropdownMenuItem onClick={() => void signOut()}>
+          <DropdownMenuItem onClick={() => void onSignOut()}>
             <LogOut className="mr-2 h-4 w-4" /> Logout
           </DropdownMenuItem>
         ) : null}

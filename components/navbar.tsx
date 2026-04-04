@@ -19,7 +19,7 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur md:px-8">
       <div className="flex items-center gap-8">
-        <span className="font-bold text-xl tracking-tight">FinanceDash.</span>
+        <span className="font-bold text-xl tracking-tight">FinDash.</span>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-2">

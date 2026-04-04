@@ -4,14 +4,19 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { useStore } from "@/store/useStore";
+import { OverviewSummaryCards } from "@/components/overview-summary-cards";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   const { user, isLoading } = useSupabaseAuth();
+  const { transactions } = useStore();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace("/dashboard");
+      router.replace("/transactions");
     }
   }, [isLoading, user, router]);
 
@@ -20,14 +25,14 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-background via-background to-rose-950/15 p-6 md:p-10">
+    <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-linear-to-br from-background via-background to-rose-950/15 p-6 md:p-10">
       <div className="pointer-events-none absolute -top-28 -right-24 h-72 w-72 rounded-full bg-rose-500/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
 
       <div className="relative mx-auto flex max-w-4xl flex-col gap-8">
         <div className="space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            FinanceDash
+            FinDash
           </p>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight md:text-5xl">
             Track money with clarity.
@@ -44,6 +49,18 @@ export default function LandingPage() {
         <div className="flex flex-wrap items-center gap-3">
           <AuthDialog triggerLabel="Login" mode="signin" />
           <AuthDialog triggerLabel="Sign up" mode="signup" variant="default" />
+          <Link href="/transactions">
+            <Button variant="ghost" size="sm">
+              Explore as Guest
+            </Button>
+          </Link>
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Live Preview
+          </p>
+          <OverviewSummaryCards transactions={transactions} />
         </div>
 
         <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">

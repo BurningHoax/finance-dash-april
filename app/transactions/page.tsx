@@ -6,6 +6,9 @@ import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { AddTransactionDialog } from "@/components/transactions/add-transaction-dialog";
 import { TransactionsFilters } from "@/components/transactions/transactions-filters";
 import { TransactionsTable } from "@/components/transactions/transactions-table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sparkles } from "lucide-react";
 
 type TransactionTypeFilter = "all" | Transaction["type"];
 type SortOption = "date-desc" | "date-asc" | "amount-desc" | "amount-asc";
@@ -17,7 +20,10 @@ export default function TransactionsPage() {
     removeTransaction,
     isTransactionsLoading,
   } = useStore();
-  const { accessToken } = useSupabaseAuth();
+  const { accessToken, user } = useSupabaseAuth();
+  const [dismissedTipForUser, setDismissedTipForUser] = useState<string | null>(
+    null,
+  );
 
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>("all");
@@ -75,6 +81,26 @@ export default function TransactionsPage() {
     setSortBy("date-desc");
   };
 
+  const hasSeenTipInStorage =
+    !!user &&
+    typeof window !== "undefined" &&
+    window.localStorage.getItem(`findash-transactions-tip-seen-${user.id}`) ===
+      "true";
+
+  const showOnboardingTip =
+    !!user &&
+    !!accessToken &&
+    !hasSeenTipInStorage &&
+    dismissedTipForUser !== user.id;
+
+  const dismissOnboardingTip = () => {
+    if (user) {
+      const storageKey = `findash-transactions-tip-seen-${user.id}`;
+      window.localStorage.setItem(storageKey, "true");
+      setDismissedTipForUser(user.id);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -104,6 +130,39 @@ export default function TransactionsPage() {
         onSortChange={setSortBy}
         onReset={resetFilters}
       />
+
+      {showOnboardingTip ? (
+        <Card className="border-emerald-500/30 bg-emerald-500/5 shadow-[0_0_0_1px_hsl(142_76%_46%/0.25),0_20px_40px_-28px_hsl(142_76%_46%/0.75)]">
+          <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <p className="flex items-center gap-2 text-sm font-semibold text-emerald-600">
+                <Sparkles className="size-4" />
+                Quick tip for your first visit
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Use filters to narrow results fast, then add transactions from
+                the top-right button. You can dismiss this guide anytime.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={dismissOnboardingTip}
+              >
+                Got it
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={dismissOnboardingTip}
+              >
+                Skip
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {!accessToken ? (
         <p className="text-sm text-muted-foreground">

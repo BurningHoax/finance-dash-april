@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { LogIn, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +29,7 @@ export function AuthDialog({
   triggerLabel,
   variant = "outline",
 }: Props) {
+  const router = useRouter();
   const {
     signIn,
     sendEmailOtp,
@@ -38,6 +40,7 @@ export function AuthDialog({
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,10 +78,13 @@ export function AuthDialog({
 
     if (mode === "signup") {
       setSuccess("Account created and verified successfully.");
+      setIsOpen(false);
+      router.replace("/transactions");
       return;
     }
 
     setIsOpen(false);
+    router.replace("/transactions");
   };
 
   const onSendOtp = async () => {
@@ -166,6 +172,7 @@ export function AuthDialog({
   const actionLabel = mode === "signin" ? "Sign in" : "Sign up";
   const loadingLabel = mode === "signin" ? "Signing in..." : "Signing up...";
   const label = triggerLabel ?? (mode === "signin" ? "Login" : "Sign up");
+  const passwordInputType = showPassword ? "text" : "password";
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -208,13 +215,28 @@ export function AuthDialog({
             <label className="text-sm font-medium" htmlFor="auth-password">
               Password
             </label>
-            <Input
-              id="auth-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter your password"
-            />
+            <div className="relative">
+              <Input
+                id="auth-password"
+                type={passwordInputType}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             {mode === "signin" ? (
               <button
                 type="button"
