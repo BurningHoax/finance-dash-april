@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
+import SpeedInsightsClient from "@/components/SpeedInsightsClient";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
               {children}
             </main>
+            <SpeedInsightsClient />
           </div>
         </ThemeProvider>
       </body>
