@@ -91,7 +91,7 @@ pnpm lint
 pnpm build
 ```
 
-### Vercel deployment link: Not live yet
+### Vercel deployment link: [FinDash-hoaxed](https://findash-hoaxed.vercel.app/)
 
 Deployment guide will be finalized after production domain is confirmed.
 
