@@ -31,14 +31,3 @@ export function getUserScopedClient(accessToken: string) {
     },
   });
 }
-
-export function getServiceRoleClient() {
-  const serviceRoleKey = getRequiredEnv(
-    process.env.SUPABASE_SERVICE_ROLE,
-    "SUPABASE_SERVICE_ROLE",
-  );
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false },
-  });
-}
