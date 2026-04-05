@@ -41,8 +41,7 @@ export default function LandingPage() {
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
             Browse the dashboard and transactions as a guest. Sign up to
-            securely save transactions and access your past records from
-            Supabase.
+            securely save transactions and access your past records.
           </p>
         </div>
 
