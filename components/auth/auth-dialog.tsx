@@ -257,32 +257,37 @@ export function AuthDialog({
           </div>
 
           {activeMode === "signup" ? (
-            <div className="flex items-center gap-2">
+            <div className="space-y-2">
               <Button
                 type="button"
                 variant="secondary"
-                className="flex-1"
+                className="w-full"
                 onClick={onSendOtp}
                 disabled={isSubmitting}
               >
                 Send OTP
               </Button>
-              <Input
-                id="auth-otp"
-                value={otpCode}
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                onChange={(event) => setOtpCode(event.target.value)}
-                placeholder="Enter OTP"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onVerifyOtp}
-                disabled={isSubmitting}
-              >
-                Verify OTP
-              </Button>
+
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+                <Input
+                  id="auth-otp"
+                  value={otpCode}
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
+                  onChange={(event) => setOtpCode(event.target.value)}
+                  placeholder="Enter OTP"
+                  className="min-w-0"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onVerifyOtp}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto"
+                >
+                  Verify OTP
+                </Button>
+              </div>
             </div>
           ) : null}
 

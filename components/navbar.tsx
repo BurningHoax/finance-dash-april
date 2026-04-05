@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { ThemeToggleButton } from "@/components/theme-toggle-button";
+import { NavbarMobileMenu } from "@/components/navbar-mobile-menu";
 import { NavbarRoleMenu } from "@/components/navbar-role-menu";
 import { Button } from "@/components/ui/button";
 import { Home, LayoutDashboard, ReceiptText } from "lucide-react";
@@ -11,8 +12,9 @@ import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { useTransactionsSync } from "@/hooks/use-transactions-sync";
 
 export function Navbar() {
-  const { user, accessToken, isLoading } = useSupabaseAuth();
+  const { user, accessToken, isLoading, signOut } = useSupabaseAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   useTransactionsSync({ accessToken, isAuthLoading: isLoading });
 
@@ -54,12 +56,27 @@ export function Navbar() {
       </div>
 
       <div className="flex items-center gap-4">
-        <NavbarRoleMenu />
+        <div className="hidden md:block">
+          <NavbarRoleMenu />
+        </div>
         <ThemeToggleButton />
+        <NavbarMobileMenu
+          pathname={pathname}
+          userEmail={user?.email}
+          onSignOut={() => {
+            void signOut().then((result) => {
+              if (!result.error) {
+                router.replace("/");
+              }
+            });
+          }}
+        />
 
-        {!user ? (
-          <AuthDialog triggerLabel="Login / Sign up" mode="signin" />
-        ) : null}
+        <div className="hidden md:block">
+          {!user ? (
+            <AuthDialog triggerLabel="Login / Sign up" mode="signin" />
+          ) : null}
+        </div>
       </div>
     </nav>
   );
