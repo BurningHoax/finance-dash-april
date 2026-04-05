@@ -51,6 +51,13 @@ export async function DELETE(
 
   const { id } = await params;
 
+  if (!id || !id.trim()) {
+    return NextResponse.json(
+      { error: "Transaction id is required" },
+      { status: 400 },
+    );
+  }
+
   const { data, error } = await auth.client
     .from("transactions")
     .delete()

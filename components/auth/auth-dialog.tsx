@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordField } from "@/components/password-field";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,6 @@ export function AuthDialog({
   const [activeMode, setActiveMode] = useState<AuthMode>(mode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -174,15 +174,15 @@ export function AuthDialog({
   const loadingLabel =
     activeMode === "signin" ? "Signing in..." : "Signing up...";
   const label = triggerLabel ?? (mode === "signin" ? "Login" : "Sign up");
-  const passwordInputType = showPassword ? "text" : "password";
 
   const onOpenChange = (nextOpen: boolean) => {
     setIsOpen(nextOpen);
-    if (nextOpen) {
-      setActiveMode(mode);
-      setError(null);
-      setSuccess(null);
-    }
+    setActiveMode(mode);
+    setError(null);
+    setSuccess(null);
+    setPassword("");
+    setOtpCode("");
+    setIsOtpVerified(false);
   };
 
   const switchMode = (nextMode: AuthMode) => {
@@ -221,6 +221,7 @@ export function AuthDialog({
               id="auth-email"
               type="email"
               value={email}
+              autoComplete="email"
               onChange={(event) => {
                 setEmail(event.target.value);
                 if (activeMode === "signup") {
@@ -232,31 +233,17 @@ export function AuthDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="auth-password">
-              Password
-            </label>
-            <div className="relative">
-              <Input
-                id="auth-password"
-                type={passwordInputType}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter your password"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((current) => !current)}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </button>
-            </div>
+            <PasswordField
+              id="auth-password"
+              label="Password"
+              value={password}
+              onValueChange={setPassword}
+              placeholder="Enter your password"
+              autoComplete={
+                activeMode === "signin" ? "current-password" : "new-password"
+              }
+              disabled={isSubmitting}
+            />
             {activeMode === "signin" ? (
               <button
                 type="button"
@@ -283,6 +270,8 @@ export function AuthDialog({
               <Input
                 id="auth-otp"
                 value={otpCode}
+                autoComplete="one-time-code"
+                inputMode="numeric"
                 onChange={(event) => setOtpCode(event.target.value)}
                 placeholder="Enter OTP"
               />

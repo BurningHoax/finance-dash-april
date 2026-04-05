@@ -136,7 +136,16 @@ export async function POST(request: Request) {
     return auth.response;
   }
 
-  const payload = await request.json();
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON" },
+      { status: 400 },
+    );
+  }
+
   const validation = validatePayload(payload);
 
   if (!validation.valid || !validation.data) {

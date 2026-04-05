@@ -9,11 +9,6 @@ type SignInInput = {
   password: string;
 };
 
-type SignUpInput = {
-  email: string;
-  password: string;
-};
-
 type OtpInput = {
   email: string;
   shouldCreateUser?: boolean;
@@ -62,14 +57,6 @@ export function useSupabaseAuth() {
 
   const signIn = useCallback(async ({ email, password }: SignInInput) => {
     const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
-  }, []);
-
-  const signUp = useCallback(async ({ email, password }: SignUpInput) => {
-    const { error } = await supabase.auth.signUp({
       email,
       password,
     });
@@ -137,7 +124,6 @@ export function useSupabaseAuth() {
     accessToken,
     isLoading,
     signIn,
-    signUp,
     sendEmailOtp,
     verifyEmailOtp,
     sendPasswordResetEmail,
