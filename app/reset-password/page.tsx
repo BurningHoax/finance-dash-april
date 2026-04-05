@@ -48,11 +48,11 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setSuccess("Password updated successfully. Redirecting to dashboard...");
+    setSuccess("Password updated successfully. Redirecting to transactions...");
     setIsSubmitting(false);
 
     setTimeout(() => {
-      router.replace("/dashboard");
+      router.replace("/transactions");
     }, 1000);
   };
 

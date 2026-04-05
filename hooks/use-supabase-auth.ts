@@ -78,16 +78,10 @@ export function useSupabaseAuth() {
 
   const sendEmailOtp = useCallback(
     async ({ email, shouldCreateUser = false }: OtpInput) => {
-      const emailRedirectTo =
-        typeof window === "undefined"
-          ? undefined
-          : `${window.location.origin}/transactions`;
-
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser,
-          emailRedirectTo,
         },
       });
 

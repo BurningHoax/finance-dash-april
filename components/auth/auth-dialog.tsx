@@ -38,6 +38,7 @@ export function AuthDialog({
     updatePassword,
   } = useSupabaseAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<AuthMode>(mode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -56,14 +57,14 @@ export function AuthDialog({
       return;
     }
 
-    if (mode === "signup" && !isOtpVerified) {
+    if (activeMode === "signup" && !isOtpVerified) {
       setError("Verify your email OTP first, then complete signup.");
       return;
     }
 
     setIsSubmitting(true);
     const result =
-      mode === "signin"
+      activeMode === "signin"
         ? await signIn({ email: email.trim(), password })
         : await updatePassword({ password });
 
@@ -76,7 +77,7 @@ export function AuthDialog({
     setIsSubmitting(false);
     setPassword("");
 
-    if (mode === "signup") {
+    if (activeMode === "signup") {
       setSuccess("Account created and verified successfully.");
       setIsOpen(false);
       router.replace("/transactions");
@@ -108,7 +109,7 @@ export function AuthDialog({
       return;
     }
 
-    setSuccess("OTP sent to your email. Enter the code to verify your signup.");
+    setSuccess("OTP sent. Enter the code from your email to verify signup.");
     setIsOtpVerified(false);
     setIsSubmitting(false);
   };
@@ -164,18 +165,37 @@ export function AuthDialog({
     setIsSubmitting(false);
   };
 
-  const title = mode === "signin" ? "Sign in" : "Create account";
+  const title = activeMode === "signin" ? "Sign in" : "Create account";
   const description =
-    mode === "signin"
+    activeMode === "signin"
       ? "Sign in with email and password."
       : "Create an account with OTP verification, then set your password.";
-  const actionLabel = mode === "signin" ? "Sign in" : "Sign up";
-  const loadingLabel = mode === "signin" ? "Signing in..." : "Signing up...";
+  const actionLabel = activeMode === "signin" ? "Sign in" : "Sign up";
+  const loadingLabel =
+    activeMode === "signin" ? "Signing in..." : "Signing up...";
   const label = triggerLabel ?? (mode === "signin" ? "Login" : "Sign up");
   const passwordInputType = showPassword ? "text" : "password";
 
+  const onOpenChange = (nextOpen: boolean) => {
+    setIsOpen(nextOpen);
+    if (nextOpen) {
+      setActiveMode(mode);
+      setError(null);
+      setSuccess(null);
+    }
+  };
+
+  const switchMode = (nextMode: AuthMode) => {
+    setActiveMode(nextMode);
+    setError(null);
+    setSuccess(null);
+    setIsOtpVerified(false);
+    setOtpCode("");
+    setPassword("");
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant={variant} size="sm" className="gap-2">
           {mode === "signin" ? (
@@ -203,7 +223,7 @@ export function AuthDialog({
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value);
-                if (mode === "signup") {
+                if (activeMode === "signup") {
                   setIsOtpVerified(false);
                 }
               }}
@@ -237,7 +257,7 @@ export function AuthDialog({
                 )}
               </button>
             </div>
-            {mode === "signin" ? (
+            {activeMode === "signin" ? (
               <button
                 type="button"
                 className="text-xs text-muted-foreground underline-offset-4 hover:underline"
@@ -249,7 +269,7 @@ export function AuthDialog({
             ) : null}
           </div>
 
-          {mode === "signup" ? (
+          {activeMode === "signup" ? (
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -277,7 +297,7 @@ export function AuthDialog({
             </div>
           ) : null}
 
-          {mode === "signup" ? (
+          {activeMode === "signup" ? (
             <p className="text-xs text-muted-foreground">
               {isOtpVerified
                 ? "OTP verified. You can now complete signup."
@@ -292,6 +312,25 @@ export function AuthDialog({
         </div>
 
         <DialogFooter>
+          {activeMode === "signin" ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => switchMode("signup")}
+              disabled={isSubmitting}
+            >
+              Create account
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => switchMode("signin")}
+              disabled={isSubmitting}
+            >
+              Already have an account?
+            </Button>
+          )}
           <Button type="button" onClick={onSubmit} disabled={isSubmitting}>
             {isSubmitting ? loadingLabel : actionLabel}
           </Button>
