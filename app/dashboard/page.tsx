@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/store/useStore";
 import { OverviewCharts } from "@/components/overview-charts";
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function DashboardOverview() {
+function DashboardOverviewContent() {
   const { transactions } = useStore();
   const { accessToken } = useSupabaseAuth();
   const router = useRouter();
@@ -90,5 +90,19 @@ export default function DashboardOverview() {
 
       <OverviewCharts transactions={visibleTransactions} />
     </div>
+  );
+}
+
+export default function DashboardOverview() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-sm text-muted-foreground">
+          Loading dashboard...
+        </div>
+      }
+    >
+      <DashboardOverviewContent />
+    </Suspense>
   );
 }

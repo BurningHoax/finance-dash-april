@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useStore, type Transaction } from "@/store/useStore";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
@@ -24,7 +24,7 @@ function parseTransactionTypeFilter(
   return value === "income" || value === "expense" ? value : "all";
 }
 
-export default function TransactionsPage() {
+function TransactionsPageContent() {
   const searchParams = useSearchParams();
 
   const {
@@ -214,5 +214,19 @@ export default function TransactionsPage() {
         onDeleted={removeTransaction}
       />
     </div>
+  );
+}
+
+export default function TransactionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-sm text-muted-foreground">
+          Loading transactions...
+        </div>
+      }
+    >
+      <TransactionsPageContent />
+    </Suspense>
   );
 }
