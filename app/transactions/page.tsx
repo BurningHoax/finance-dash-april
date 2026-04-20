@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useStore, type Transaction } from "@/store/useStore";
 import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { AddTransactionDialog } from "@/components/transactions/add-transaction-dialog";
@@ -9,11 +10,23 @@ import { TransactionsTable } from "@/components/transactions/transactions-table"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles } from "lucide-react";
+import {
+  getMonthKeyFromDate,
+  getTransactionMonthOptions,
+} from "@/lib/transactions";
 
 type TransactionTypeFilter = "all" | Transaction["type"];
 type SortOption = "date-desc" | "date-asc" | "amount-desc" | "amount-asc";
 
+function parseTransactionTypeFilter(
+  value: string | null,
+): TransactionTypeFilter {
+  return value === "income" || value === "expense" ? value : "all";
+}
+
 export default function TransactionsPage() {
+  const searchParams = useSearchParams();
+
   const {
     transactions,
     addTransaction,
@@ -25,10 +38,24 @@ export default function TransactionsPage() {
     null,
   );
 
+  const requestedTypeFilter = searchParams.get("type");
+  const requestedMonthFilter = searchParams.get("month");
+
   const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>(() =>
+    parseTransactionTypeFilter(requestedTypeFilter),
+  );
+  const [monthFilter, setMonthFilter] = useState(
+    () => requestedMonthFilter ?? "all",
+  );
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
+  const monthOptions = useMemo(() => {
+    return getTransactionMonthOptions(
+      transactions.map((transaction) => transaction.date),
+    );
+  }, [transactions]);
+
   const categories = useMemo(() => {
     return Array.from(
       new Set(transactions.map((transaction) => transaction.category)),
@@ -47,6 +74,11 @@ export default function TransactionsPage() {
           ? true
           : transaction.category === categoryFilter;
 
+      const matchesMonth =
+        monthFilter === "all"
+          ? true
+          : getMonthKeyFromDate(transaction.date) === monthFilter;
+
       const matchesQuery =
         normalizedQuery.length === 0
           ? true
@@ -54,7 +86,7 @@ export default function TransactionsPage() {
             transaction.category.toLowerCase().includes(normalizedQuery) ||
             transaction.id.toLowerCase().includes(normalizedQuery);
 
-      return matchesType && matchesCategory && matchesQuery;
+      return matchesType && matchesMonth && matchesCategory && matchesQuery;
     });
 
     return filtered.sort((a, b) => {
@@ -72,11 +104,12 @@ export default function TransactionsPage() {
       }
       return a.amount - b.amount;
     });
-  }, [transactions, query, typeFilter, categoryFilter, sortBy]);
+  }, [transactions, query, typeFilter, monthFilter, categoryFilter, sortBy]);
 
   const resetFilters = () => {
     setQuery("");
     setTypeFilter("all");
+    setMonthFilter("all");
     setCategoryFilter("all");
     setSortBy("date-desc");
   };
@@ -120,12 +153,15 @@ export default function TransactionsPage() {
       <TransactionsFilters
         query={query}
         typeFilter={typeFilter}
+        monthFilter={monthFilter}
+        monthOptions={monthOptions}
         categoryFilter={categoryFilter}
         categories={categories}
         sortBy={sortBy}
         resultCount={filteredTransactions.length}
         onQueryChange={setQuery}
         onTypeFilterChange={setTypeFilter}
+        onMonthFilterChange={setMonthFilter}
         onCategoryFilterChange={setCategoryFilter}
         onSortChange={setSortBy}
         onReset={resetFilters}

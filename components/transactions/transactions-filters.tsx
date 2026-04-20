@@ -2,6 +2,7 @@
 
 import { ArrowDownUp, Search, X } from "lucide-react";
 import type { Transaction } from "@/store/useStore";
+import type { MonthOption } from "@/lib/transactions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,12 +21,15 @@ type SortOption = "date-desc" | "date-asc" | "amount-desc" | "amount-asc";
 type Props = {
   query: string;
   typeFilter: TransactionTypeFilter;
+  monthFilter: string;
+  monthOptions: MonthOption[];
   categoryFilter: string;
   categories: string[];
   sortBy: SortOption;
   resultCount: number;
   onQueryChange: (value: string) => void;
   onTypeFilterChange: (value: TransactionTypeFilter) => void;
+  onMonthFilterChange: (value: string) => void;
   onCategoryFilterChange: (value: string) => void;
   onSortChange: (value: SortOption) => void;
   onReset: () => void;
@@ -34,12 +38,15 @@ type Props = {
 export function TransactionsFilters({
   query,
   typeFilter,
+  monthFilter,
+  monthOptions,
   categoryFilter,
   categories,
   sortBy,
   resultCount,
   onQueryChange,
   onTypeFilterChange,
+  onMonthFilterChange,
   onCategoryFilterChange,
   onSortChange,
   onReset,
@@ -50,7 +57,7 @@ export function TransactionsFilters({
         <CardTitle className="text-base">Filters</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_170px_180px_200px_auto]">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_170px_180px_180px_200px_auto]">
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -74,6 +81,20 @@ export function TransactionsFilters({
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="income">Income</SelectItem>
               <SelectItem value="expense">Expense</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={monthFilter} onValueChange={onMonthFilterChange}>
+            <SelectTrigger className="w-full transition-colors hover:border-ring/60 hover:bg-muted/40">
+              <SelectValue placeholder="Filter month" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Months</SelectItem>
+              {monthOptions.map((monthOption) => (
+                <SelectItem key={monthOption.value} value={monthOption.value}>
+                  {monthOption.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 

@@ -16,7 +16,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace("/transactions");
+      router.replace("/home");
     }
   }, [isLoading, user, router]);
 
@@ -70,7 +70,8 @@ export default function LandingPage() {
             Add and delete transactions in guest mode
           </div>
           <div className="rounded-lg border border-border/60 bg-background/50 p-4">
-            Sign up to save and keep history... More features incoming exclusively for registered users.
+            Sign up to save and keep history... More features incoming
+            exclusively for registered users.
           </div>
         </div>
       </div>

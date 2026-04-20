@@ -14,12 +14,14 @@ import { Home, LayoutDashboard, Menu, ReceiptText } from "lucide-react";
 
 type NavbarMobileMenuProps = {
   pathname: string;
+  homeHref: string;
   userEmail: string | undefined;
   onSignOut: () => void;
 };
 
 export function NavbarMobileMenu({
   pathname,
+  homeHref,
   userEmail,
   onSignOut,
 }: NavbarMobileMenuProps) {
@@ -42,9 +44,9 @@ export function NavbarMobileMenu({
         <div className="px-4 pb-4">
           <div className="grid gap-2">
             <SheetClose asChild>
-              <Link href="/">
+              <Link href={homeHref}>
                 <Button
-                  variant={pathname === "/" ? "secondary" : "ghost"}
+                  variant={pathname === homeHref ? "secondary" : "ghost"}
                   className="w-full justify-start"
                 >
                   <Home className="mr-2 h-4 w-4" />

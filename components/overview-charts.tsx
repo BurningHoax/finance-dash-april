@@ -1,6 +1,6 @@
 "use client";
 
-import { useStore } from "@/store/useStore";
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -25,6 +25,7 @@ import {
   Pie,
 } from "recharts";
 import { mapExpenseCategory } from "@/lib/transactions";
+import type { Transaction } from "@/store/useStore";
 
 type BarDataPoint = {
   date: string;
@@ -62,56 +63,66 @@ const pieChartConfig = {
   Other: { label: "Other", color: "var(--chart-5)" },
 };
 
-export function OverviewCharts() {
-  const { transactions } = useStore();
+type Props = {
+  transactions: Transaction[];
+};
 
+export function OverviewCharts({ transactions }: Props) {
   // 1. Process Data for Bar Chart (Income vs Expense by Date)
-  const barData = transactions
-    .reduce((acc, curr) => {
-      const dateObj = new Date(curr.date);
-      const formattedDate = dateObj.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
+  const barData = useMemo(
+    () =>
+      transactions
+        .reduce((acc, curr) => {
+          const dateObj = new Date(curr.date);
+          const formattedDate = dateObj.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
 
-      const existing = acc.find((item) => item.date === formattedDate);
-      if (existing) {
-        if (curr.type === "income") existing.income += curr.amount;
-        else existing.expense += curr.amount;
-      } else {
-        acc.push({
-          date: formattedDate,
-          income: curr.type === "income" ? curr.amount : 0,
-          expense: curr.type === "expense" ? curr.amount : 0,
-          rawDate: dateObj.getTime(),
-        });
-      }
-      return acc;
-    }, [] as BarDataPoint[])
-    .sort((a, b) => a.rawDate - b.rawDate);
+          const existing = acc.find((item) => item.date === formattedDate);
+          if (existing) {
+            if (curr.type === "income") existing.income += curr.amount;
+            else existing.expense += curr.amount;
+          } else {
+            acc.push({
+              date: formattedDate,
+              income: curr.type === "income" ? curr.amount : 0,
+              expense: curr.type === "expense" ? curr.amount : 0,
+              rawDate: dateObj.getTime(),
+            });
+          }
+          return acc;
+        }, [] as BarDataPoint[])
+        .sort((a, b) => a.rawDate - b.rawDate),
+    [transactions],
+  );
 
   // 2. Process Data for Pie Chart (Expenses by Category)
-  const pieData = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc, curr) => {
-      const mappedCategory = mapExpenseCategory(curr.category);
+  const pieData = useMemo(
+    () =>
+      transactions
+        .filter((transaction) => transaction.type === "expense")
+        .reduce((acc, curr) => {
+          const mappedCategory = mapExpenseCategory(curr.category);
 
-      const existing = acc.find(
-        (item) => item.category === mappedCategory.label,
-      );
+          const existing = acc.find(
+            (item) => item.category === mappedCategory.label,
+          );
 
-      if (existing) {
-        existing.amount += curr.amount;
-      } else {
-        acc.push({
-          category: mappedCategory.label,
-          amount: curr.amount,
-          fill: mappedCategory.color,
-        });
-      }
-      return acc;
-    }, [] as PieDataPoint[])
-    .sort((a, b) => b.amount - a.amount);
+          if (existing) {
+            existing.amount += curr.amount;
+          } else {
+            acc.push({
+              category: mappedCategory.label,
+              amount: curr.amount,
+              fill: mappedCategory.color,
+            });
+          }
+          return acc;
+        }, [] as PieDataPoint[])
+        .sort((a, b) => b.amount - a.amount),
+    [transactions],
+  );
 
   return (
     <div className="grid gap-4 md:grid-cols-2">

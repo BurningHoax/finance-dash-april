@@ -8,6 +8,11 @@ export type NewTransactionPayload = {
   type: TransactionType;
 };
 
+export type MonthOption = {
+  value: string;
+  label: string;
+};
+
 export const EXPENSE_CATEGORIES = [
   "Groceries",
   "Rent",
@@ -72,5 +77,56 @@ export function mapExpenseCategory(category: string): {
       label: "Other",
       color: "var(--chart-5)",
     }
+  );
+}
+
+export function getMonthKeyFromDate(date: string): string {
+  return date.slice(0, 7);
+}
+
+export function formatMonthLabel(monthKey: string): string {
+  const [yearPart, monthPart] = monthKey.split("-");
+  const year = Number(yearPart);
+  const month = Number(monthPart);
+
+  if (!year || !month) {
+    return monthKey;
+  }
+
+  return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+export function getTransactionMonthOptions(
+  dates: string[],
+  maxMonths?: number,
+): MonthOption[] {
+  const uniqueMonthKeys = Array.from(
+    new Set(dates.map((date) => getMonthKeyFromDate(date))),
+  ).sort((a, b) => b.localeCompare(a));
+
+  const limitedMonthKeys =
+    typeof maxMonths === "number"
+      ? uniqueMonthKeys.slice(0, maxMonths)
+      : uniqueMonthKeys;
+
+  return limitedMonthKeys.map((monthKey) => ({
+    value: monthKey,
+    label: formatMonthLabel(monthKey),
+  }));
+}
+
+export function filterTransactionsByMonth<T extends { date: string }>(
+  transactions: T[],
+  monthKey: string,
+): T[] {
+  if (monthKey === "all") {
+    return transactions;
+  }
+
+  return transactions.filter(
+    (transaction) => getMonthKeyFromDate(transaction.date) === monthKey,
   );
 }

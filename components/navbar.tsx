@@ -15,6 +15,8 @@ export function Navbar() {
   const { user, accessToken, isLoading, signOut } = useSupabaseAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const homeHref = user ? "/home" : "/";
+  const isHomeActive = pathname === homeHref;
 
   useTransactionsSync({ accessToken, isAuthLoading: isLoading });
 
@@ -25,11 +27,8 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-2">
-          <Link href="/">
-            <Button
-              variant={pathname === "/" ? "secondary" : "ghost"}
-              size="sm"
-            >
+          <Link href={homeHref}>
+            <Button variant={isHomeActive ? "secondary" : "ghost"} size="sm">
               <Home className="w-4 h-4 mr-2" />
               Home
             </Button>
@@ -62,6 +61,7 @@ export function Navbar() {
         <ThemeToggleButton />
         <NavbarMobileMenu
           pathname={pathname}
+          homeHref={homeHref}
           userEmail={user?.email}
           onSignOut={() => {
             void signOut().then((result) => {
